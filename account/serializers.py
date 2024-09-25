@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import User
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 class UserSerializer(serializers.ModelSerializer):
     password = serializers.CharField(write_only =True,required=True,style={'input_type':"password"})
@@ -32,5 +33,18 @@ class UserSerializer(serializers.ModelSerializer):
         email = EmailMultiAlternatives(email_subject, '', to=[user.email])
         email.attach_alternative(email_body, 'text/html')
         email.send()
+
+
+class CustomTokenObtainPairSerializer(TokenObtainPairSerializer):
+    @classmethod
+    def get_token(cls, user):
+        token = super().get_token(user)
+        token['admin'] = user.is_staff  
+        return token
+
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        data['admin'] = self.user.is_staff
+        return data
     
 
